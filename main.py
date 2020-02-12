@@ -1,5 +1,5 @@
 import pygame
-import time
+import gameloop
 
 game_is_running = True
 is_running2 = True
@@ -7,7 +7,7 @@ hoehe = 800
 breite = 800
 
 
-class Display:
+class Display: # Hier wird der screen initialisiert
     def __init__(self, screen_size_x, screen_size_y):
         self.width = screen_size_x
         self.hight = screen_size_y
@@ -27,10 +27,8 @@ class Display:
         is_running2 = False
 
 
-clock = pygame.time.Clock()
 screen = Display(breite, hoehe)
+player = gameloop.Player(64,screen.display, (100,100))
 
 while game_is_running:
-    screen.get_imput()
-    pygame.draw.rect(screen.display, (255, 0, 0), ((0, 0), (200, 400)))
-    pygame.display.flip()
+    gameloop.level_loop(screen, player)
