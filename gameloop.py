@@ -85,7 +85,6 @@ class Player:
         else:
             self.display.blit(standpic[self.direction], self.rectplayer)
 
-  jnfkjldlkjlkasjl               adsfah
         pygame.display.flip()
 
 
