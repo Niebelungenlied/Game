@@ -6,14 +6,6 @@ def get_character(characternumber):
     if characternumber == 1:
         return 'Character1'
 
-
-
-
-
-class Level:
-    def __init__(self, level):
-        self.level = level
-
-    def get_background(self):
-        if self.level == 1:
-            return 'bg.png'
+def get_background(level):
+    if level == 1:
+        return 'bg.jpg'

@@ -1,5 +1,6 @@
 import pygame
 import time
+import levels
 
 walkpic = standpic = []
 
@@ -35,45 +36,77 @@ class Player:
         loadcharacter(1)
         self.size = size
         self.display = display
-        self.rectplayer = pygame.Rect(0,0, size, size)
+        self.rectplayer = pygame.Rect(0, 0, size, size)
         self.rectplayer.center = startpos
-        self.levelrect = pygame.Rect(0, 0, 500, 500)
+        self.backgroundpic = pygame.image.load(f'Levels/{levels.get_background(1)}')
+        self.backgroundrect = self.backgroundpic.get_rect()
+        self.backgroundrect.center = (600, 500)
+        self.levelrect = pygame.Rect(200, 200, 800, 600)
         self.starttime = time.time()
+        self.lasttime1 = self.lasttime2 = self.starttime
         self.nextframe = 80
         self.frame = 0
         self.direction = 0
-        self.speeed = 1
+        self.speeed = 200
+        self.speed = 2
+        self.is_walking = False
+        self.bgspeed = 2
+
 
     def move(self):  # Hier wird der Spieler bewegt
         keys = pygame.key.get_pressed()
+        run = False
         if keys[pygame.K_UP]:
-            if self.levelrect.contains(self.rectplayer.move(0, -1)):
-                self.rectplayer = self.rectplayer.move(0, -1)
-                self.is_walking = True
-                self.direction = 1
-        else:
-            self.is_walking = False
-        if keys[pygame.K_DOWN]:
-            if self.levelrect.contains(self.rectplayer.move(0, 1)):
-                self.rectplayer = self.rectplayer.move(0, 1)
-                self.is_walking = True
-                self.direction = 0
+            if self.levelrect.contains(self.rectplayer.move(0, -self.speed)):
+                if time.time() - self.lasttime1 > 1 / self.speeed:
+                    self.lasttime1 = time.time()
+                    self.rectplayer = self.rectplayer.move(0, -self.speed)
+                    self.direction = 1
             else:
-                self.is_walking = False
+                self.backgroundrect = self.backgroundrect.move(0, self.bgspeed)
+            run = True
+
+        if keys[pygame.K_DOWN]:
+            if self.levelrect.contains(self.rectplayer.move(0, self.speed)):
+                if time.time() - self.lasttime1 > 1 / self.speeed:
+                    self.lasttime1 = time.time()
+                    self.rectplayer = self.rectplayer.move(0, self.speed)
+                    self.direction = 0
+            else:
+                self.backgroundrect = self.backgroundrect.move(0, -self.bgspeed)
+            run = True
+
+
         if keys[pygame.K_RIGHT]:
-            if self.levelrect.contains(self.rectplayer.move(1, 0)):
-                self.rectplayer = self.rectplayer.move(1, 0)
-                self.is_walking = True
+            if self.levelrect.contains(self.rectplayer.move(self.speed, 0)):
+                if time.time() - self.lasttime2 > 1 / self.speeed:
+                    self.lasttime2 = time.time()
+                    self.rectplayer = self.rectplayer.move(self.speed, 0)
                 self.direction = 2
             else:
-                self.is_walking = False
+                self.backgroundrect = self.backgroundrect.move(-self.bgspeed, 0)
+            run = True
+
         if keys[pygame.K_LEFT]:
-            if self.levelrect.contains(self.rectplayer.move(-1, 0)):
-                self.rectplayer = self.rectplayer.move(-1, 0)
-                self.is_walking = True
-                self.direction = 3
+            if self.levelrect.contains(self.rectplayer.move(-self.speed, 0)):
+                if time.time() - self.lasttime2 > 1 / self.speeed:
+                    self.lasttime2 = time.time()
+                    self.rectplayer = self.rectplayer.move(-self.speed, 0)
+                    self.direction = 3
+
             else:
-                self.is_walking = False
+                self.backgroundrect = self.backgroundrect.move(self.bgspeed, 0)
+            run = True
+
+        if run:
+            self.is_walking = True
+        else:
+            self.is_walking = False
+
+    def draw_background(self):
+        self.display.blit(self.backgroundpic, self.backgroundrect)
+        print(self.backgroundrect)
+
 
     def animate(self): # Hier wird die dufte Animation gemacht
         if (time.time()-self.starttime)*1000 > self.nextframe and self.is_walking: # hier wird die Zeit seit dem Anfang des Programmstarts ausgelesen und nach 80ms der code unten ausgeführt
@@ -90,7 +123,7 @@ class Player:
 
 def level_loop(display, player):
     display.get_imput()
-    pygame.draw.rect(display.display, (0,0,0), (0, 0, 800, 800)) #Hier wird später der Hintergrund eingefügt
+    player.draw_background() #Hier wird später der Hintergrund eingefügt
     player.move()
     player.animate()
     pygame.display.flip()

@@ -3,8 +3,8 @@ import gameloop
 
 game_is_running = True
 is_running2 = True
-hoehe = 800
-breite = 800
+hoehe = 1000
+breite = 1200
 
 
 class Display: # Hier wird der screen initialisiert
@@ -28,7 +28,7 @@ class Display: # Hier wird der screen initialisiert
 
 
 screen = Display(breite, hoehe)
-player = gameloop.Player(64,screen.display, (100,100))
+player = gameloop.Player(64,screen.display, (hoehe/2, breite/2))
 
 while game_is_running:
     gameloop.level_loop(screen, player)
