@@ -1,5 +1,5 @@
 import pygame
-import gameloop
+import gameloop, levels
 
 game_is_running = True
 is_running2 = True
@@ -26,9 +26,8 @@ class Display: # Hier wird der screen initialisiert
         game_is_running = False
         is_running2 = False
 
-
 screen = Display(breite, hoehe)
-player = gameloop.Player(64,screen.display, (hoehe/2, breite/2))
+player = gameloop.Player(64,screen.display, (hoehe/2, breite/2), None)
 
 while game_is_running:
     gameloop.level_loop(screen, player)
