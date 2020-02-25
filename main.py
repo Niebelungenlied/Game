@@ -3,7 +3,7 @@ import gameloop, levels
 
 game_is_running = True
 is_running2 = True
-hoehe = 1000
+hoehe = 800
 breite = 1200
 
 
@@ -27,7 +27,11 @@ class Display: # Hier wird der screen initialisiert
         is_running2 = False
 
 screen = Display(breite, hoehe)
-player = gameloop.Player(64,screen.display, (hoehe/2, breite/2), None)
+player = gameloop.Player(64,screen.display, (hoehe/3, breite/2), None)
+pygame.font.init()
+pygame.mixer.init()
+pygame.mixer.music.load('Levels/Level1/CastleBoss.WAV')
+#pygame.mixer.music.play()
 
 while game_is_running:
     gameloop.level_loop(screen, player)

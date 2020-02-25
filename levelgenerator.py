@@ -12,6 +12,9 @@ for y in range(int(1200/40)):
     for x in range(int(1200/40)):
         returnlist.append([[-1000 + x * 128, -1000 + y * 128, 128, 128], 0])
 
+
+
+
 class Display: # Hier wird der screen initialisiert
     def __init__(self, screen_size_x, screen_size_y):
         self.width = screen_size_x
@@ -46,6 +49,24 @@ class Images:
         self.loadimages()
         for i in range(10):
             mydict[i] = [self.images[i], self.backgroundrects[i]]
+
+def move():
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_UP]:
+        for i in range(len(mydict)):
+            mydict[i][1] = mydict[i][1].move(0, 1)
+
+    if keys[pygame.K_DOWN]:
+        for i in range(len(mydict)):
+            mydict[i][1] = mydict[i][1].move(0, -1)
+
+    if keys[pygame.K_RIGHT]:
+        for i in range(len(mydict)):
+            mydict[i][1] = mydict[i][1].move(0, -1)
+
+    if keys[pygame.K_LEFT]:
+        for i in range(len(mydict)):
+            mydict[i][1] = mydict[i][1].move(0, -1)
 
 def background_rects(size, anzkacheln):
     list_rect = []
@@ -83,14 +104,16 @@ screen = Display(breite, hoehe)
 Allimages = Images()
 Sel = Select(Allimages.backgroundrects, Allimages.images)
 while game_is_running:
+    move()
     Allimages.showimages()
     Sel.selectedrect()
+
     for i in mydict:
         screen.display.blit(i[0], i[1])
     screen.get_imput()
     pygame.display.flip()
-if False: # vorsicht damit zerstörst du das alte level
-    with open('Levels/Level1.txt', 'w') as filehandle:
+if True: # vorsicht damit zerstörst du das alte level
+    with open('Levels/Level2.txt', 'w') as filehandle:
         for listitem in returnlist:
             for i in listitem:
                 filehandle.write('%s\n' % f'{i}')
