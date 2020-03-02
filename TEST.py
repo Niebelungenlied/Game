@@ -17,7 +17,7 @@ class Dir:
 def loadcharacter(charnumb):
     global walkpic
     global standpic
-    character = 'Character1'  # Hier soll ein Charakter ausgesucht werden
+    character = 'Gunter'  # Hier soll ein Charakter ausgesucht werden
     walkpic = [[pygame.image.load(f'Characters/{character}/standfront.png'),
                 pygame.image.load(f'Characters/{character}/walkfront1.png'),
                 # Hier werden die Bilder für die Animation des Spielers geladen

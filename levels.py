@@ -14,9 +14,9 @@ def get_bushrects(level, playerrect):
             rects.append(a)
     return rects
 
-def get_character(characternumber, walkorstand, hit = False):
-    if characternumber == 1:
-        character = 'Siegfried'
+def get_character(character, walkorstand, hit = False):
+    if character == 'Siegfried':
+
         hitwalkpic = [[pygame.image.load(f'Characters/{character}/hitstandfront.png'),
                     pygame.image.load(f'Characters/{character}/hitwalkfront1.png'),
                     # Hier werden die Bilder für die Animation des Spielers geladen
@@ -38,14 +38,11 @@ def get_character(characternumber, walkorstand, hit = False):
                     pygame.image.load(f'Characters/{character}/hitstandback.png'),
                     pygame.image.load(f'Characters/{character}/hitstandright.png'),
                     pygame.image.load(f'Characters/{character}/hitstandleft.png')]
+
         if hit and walkorstand == 'walk':
             return hitwalkpic
         elif hit and walkorstand != 'walk':
             return hitstandpic
-    if characternumber == 2:
-        character = 'Character1'
-    if characternumber == 3:
-        character = 'Ghost'
     walkpic = [[pygame.image.load(f'Characters/{character}/standfront.png'),
                 pygame.image.load(f'Characters/{character}/walkfront1.png'),
                 # Hier werden die Bilder für die Animation des Spielers geladen

@@ -8,6 +8,9 @@ import levels
 itemsininventar = []
 bgl = []
 rectplayer = None
+countdia = 0
+presseddia = True
+talkingcharacter = 'Siegfried'
 
 
 class Background:
@@ -32,7 +35,7 @@ class Background:
             rectplayer.move(direction[0] * self.bgspeed , direction[1] * self.bgspeed ))
 
 
-class Itemes:
+class Itemes:# Macht die Items
     def __init__(self, level, display):
         self.display = display
         self.speed = 4  # Hier wird die geschwindigkeit für den Hintergrund eingerichtet
@@ -78,7 +81,7 @@ class Itemes:
         pass
 
 
-def blit_text(surface, text, pos, font, color=pygame.Color('black')):
+def blit_text(surface, text, pos, font, color=pygame.Color('black')): # Funktion um Text anzuzeigen
     words = [word.split(' ') for word in text.splitlines()]
     space = font.size(' ')[0]
     max_width, max_height = surface.get_size()
@@ -93,18 +96,25 @@ def blit_text(surface, text, pos, font, color=pygame.Color('black')):
             surface.blit(word_surface, (x, y))
             x += word_width + space
         x = pos[0]
-        y += word_height
+        y += word_height   # # ### # #
+
 
 
 def showE(rectobj, display):
+    global presseddia
     E = pygame.image.load(f'Levels/graphics/E.png')
     rect = E.get_rect()
     rect.bottomleft = rectobj.topright
     display.blit(E, rect)
     keys = pygame.key.get_pressed()
     if keys[pygame.K_e]:
-        return True
+        if presseddia:
+            presseddia = False
+            return True
+        else:
+            return False
     else:
+        presseddia = True
         return False
 
 
@@ -117,7 +127,13 @@ def showHUD(display, lives):
 def showcommands(display):
     commands = pygame.image.load(f'Levels/graphics/commands.png')
     display.blit(commands, (0, 650))
-    text = "Willkommen im besten Spiel der Welt!!! \nBenutze W A S D um dich fort zu bewegen. "
+    if countdia == 0:
+        text = "Willkommen im besten Spiel der Welt!!! \nBenutze W A S D um dich fort zu bewegen. \nDu kannst mit den Leuten am Burghof sprechen um Missionen anzunehmen "
+    elif countdia > 0 and talkingcharacter == 'Gunter':
+        text = "Guten Tag Siegfried \nIch habe einen Job für dich!\n Ein Drache bedroht unser Königreich, kannst du " \
+               "Ihn besiegen? "
+    else:
+        text = f'{countdia}'
     font = pygame.font.SysFont('Comic sans', 40)
     blit_text(display, text, (20, 670), font)
 
@@ -171,12 +187,13 @@ class Dir:
 
 class Player:
     def __init__(self, size, display, startpos, obj):
+        self.character = 'Siegfried'
         self.is_hitting = False
         global rectplayer
-        self.walkpic = levels.get_character(1, 'walk')
-        self.standpic = levels.get_character(1, 'stand')
-        self.hitwalkpic = levels.get_character(1, 'walk', True)
-        self.hitstandpic = levels.get_character(1, 'stand', True)
+        self.walkpic = levels.get_character(self.character, 'walk')
+        self.standpic = levels.get_character(self.character, 'stand')
+        self.hitwalkpic = levels.get_character(self.character, 'walk', True)
+        self.hitstandpic = levels.get_character(self.character, 'stand', True)
         self.size = size
         self.lives = 7
         self.display = display
@@ -200,25 +217,32 @@ class Player:
         self.background = Background(1, self.display)
         self.objects = Objects(1, self.display)
         self.items = Itemes(1, self.display)
-        self.monster = Monster(64, self.display, self.objects)
-        self.guy = [Guy(64, self.display, self.objects, pygame.Rect(600, 600, 800, 400))]
+        self.monster = [Monster(64, self.display, self.objects, pygame.Rect(200, 200, 1000, 1000), (700, 750), 'Ghost'), Monster(64, self.display, self.objects, pygame.Rect(200, 200, 1000, 1000), (664, 780), 'Ghost')]
+        self.guy = [Guy(64, self.display, self.objects, pygame.Rect(600, 600, 800, 400), 'Gunter')]
         self.pressed = False
+        self.countdia = 0
 
-    def check(self, direction, rect):
+    def checkguy(self, direction, rect):
         a = False
         for i in self.guy:
             if i.is_in_guy(direction, rect, self.speed):
                 a = True
         return a
 
+    def checkmonster(self, direction, rect):
+        a = False
+        for i in self.monster:
+            if i.is_in_monster(direction, rect, self.speed):
+                a = True
+        return a
+
     def move(self):  # Hier wird der Spieler bewegt
-        global rectplayer
+        global rectplayer, countdia, talkingcharacter
         keys = pygame.key.get_pressed()
         run = False
 
         if keys[pygame.K_UP] or keys[pygame.K_w]:
-            if not self.objects.is_in_object(Dir.down, rectplayer, self.speed) and self.monster.is_in_monster(
-                    Dir.down, rectplayer, self.speed) and self.check(Dir.down, rectplayer):
+            if not self.objects.is_in_object(Dir.down, rectplayer, self.speed) and self.checkmonster(Dir.down, rectplayer) and self.checkguy(Dir.down, rectplayer):
                 if self.levelrect.move(0, -self.speed).contains(rectplayer.move(0, -2 * self.speed)):
                     if time.time() - self.lasttime1 > 1 / self.speeed:
                         self.lasttime1 = time.time()
@@ -227,7 +251,8 @@ class Player:
                 elif self.background.is_in_border(Dir.up):
                     self.objects.moveobjects(Dir.up)
                     self.background.movebackground(Dir.up)
-                    self.monster.movewithbg(Dir.up)
+                    for i in self.monster:
+                        i.movewithbg(Dir.up)
                     for i in self.guy:
                         i.movewithbg(Dir.up)
                     self.items.move(Dir.up, self.background.bgspeed)
@@ -237,8 +262,7 @@ class Player:
 
 
         if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            if not self.objects.is_in_object(Dir.up, rectplayer, self.speed) and self.monster.is_in_monster(
-                    Dir.up, rectplayer, self.speed) and self.check(Dir.up, rectplayer):
+            if not self.objects.is_in_object(Dir.up, rectplayer, self.speed) and self.checkmonster(Dir.up, rectplayer) and self.checkguy(Dir.up, rectplayer):
                 if self.levelrect.contains(rectplayer.move(0, self.speed)):
                     if time.time() - self.lasttime1 > 1 / self.speeed:
                         self.lasttime1 = time.time()
@@ -247,7 +271,8 @@ class Player:
                 elif self.background.is_in_border(Dir.down):
                     self.objects.moveobjects(Dir.down)
                     self.background.movebackground(Dir.down)
-                    self.monster.movewithbg(Dir.down)
+                    for i in self.monster:
+                        i.movewithbg(Dir.down)
                     for i in self.guy:
                         i.movewithbg(Dir.down)
                     self.items.move(Dir.down, self.background.bgspeed)
@@ -257,8 +282,7 @@ class Player:
 
 
         if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            if not self.objects.is_in_object(Dir.left, rectplayer, self.speed) and self.monster.is_in_monster(
-                    Dir.left, rectplayer, self.speed) and self.check(Dir.left, rectplayer):
+            if not self.objects.is_in_object(Dir.left, rectplayer, self.speed) and self.checkmonster(Dir.left, rectplayer) and self.checkguy(Dir.left, rectplayer):
                 if self.levelrect.contains(rectplayer.move(self.speed, 0)):
                     if time.time() - self.lasttime2 > 1 / self.speeed:
                         self.lasttime2 = time.time()
@@ -267,7 +291,8 @@ class Player:
                 elif self.background.is_in_border(Dir.right):
                     self.objects.moveobjects(Dir.right)
                     self.background.movebackground(Dir.right)
-                    self.monster.movewithbg(Dir.right)
+                    for i in self.monster:
+                        i.movewithbg(Dir.right)
                     for i in self.guy:
                         i.movewithbg(Dir.right)
                     self.items.move(Dir.right, self.background.bgspeed)
@@ -276,8 +301,7 @@ class Player:
             self.hitdirection = 2
 
         if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            if not self.objects.is_in_object(Dir.right, rectplayer, self.speed) and self.monster.is_in_monster(
-                    Dir.right, rectplayer, self.speed) and self.check(Dir.right, rectplayer):
+            if not self.objects.is_in_object(Dir.right, rectplayer, self.speed) and self.checkmonster(Dir.right, rectplayer) and self.checkguy(Dir.right, rectplayer):
                 if self.levelrect.contains(rectplayer.move(-self.speed, 0)):
                     if time.time() - self.lasttime2 > 1 / self.speeed:
                         self.lasttime2 = time.time()
@@ -287,7 +311,8 @@ class Player:
                 elif self.background.is_in_border(Dir.left):
                     self.objects.moveobjects(Dir.left)
                     self.background.movebackground(Dir.left)
-                    self.monster.movewithbg(Dir.left)
+                    for i in self.monster:
+                        i.movewithbg(Dir.left)
                     for i in self.guy:
                         i.movewithbg(Dir.left)
                     self.items.move(Dir.left, self.background.bgspeed)
@@ -311,7 +336,15 @@ class Player:
         else:
             self.is_walking = False
 
-        a = rectplayer.collidelist(self.items.rects)
+        for i in self.guy:
+            selectrect = pygame.Rect(0,0, 100, 100)
+            selectrect.center = i.rectmonster.center
+            if rectplayer.colliderect(selectrect):
+                if showE(i.rectmonster, self.display):
+                    countdia += 1
+                    talkingcharacter = i.character
+
+        a = rectplayer.collidelist(self.items.rects)#Shows the E for the Items
         if a != -1:
             if showE(self.items.rects[a], self.display):
                 self.items.pickup()
@@ -325,7 +358,6 @@ class Player:
         if (time.time() - self.starttime) * 1000 > self.nextframe and self.is_walking:  # hier wird die Zeit seit dem Anfang des Programmstarts ausgelesen und nach 80ms der code unten ausgeführt
             self.frame = (self.frame + 1) % 4
             self.nextframe += 80
-        print(self.is_hitting)
         if self.is_hitting:
             if self.is_walking:
                 self.display.blit(self.hitwalkpic[self.hitdirection][self.frame], rectplayer)
@@ -340,18 +372,19 @@ class Player:
                 self.display.blit(self.standpic[self.direction], rectplayer)
 
     def hit(self):
-        if self.hitdirection == 0 and self.monster.rectmonster.colliderect(
-                self.hitrangey) and self.monster.rectmonster.y > rectplayer.y:
-            self.monster.takedamage(3)
-        if self.hitdirection == 1 and self.monster.rectmonster.colliderect(
-                self.hitrangey) and self.monster.rectmonster.y < rectplayer.y:
-            self.monster.takedamage(3)
-        if self.hitdirection == 2 and self.monster.rectmonster.colliderect(
-                self.hitrangex) and self.monster.rectmonster.x > rectplayer.x:
-            self.monster.takedamage(3)
-        if self.hitdirection == 3 and self.monster.rectmonster.colliderect(
-                self.hitrangex) and self.monster.rectmonster.x < rectplayer.x:
-            self.monster.takedamage(3)
+        for monsters in self.monster:
+            if self.hitdirection == 0 and monsters.rectmonster.colliderect(
+                    self.hitrangey) and monsters.rectmonster.y > rectplayer.y:
+                monsters.takedamage(3)
+            if self.hitdirection == 1 and monsters.rectmonster.colliderect(
+                    self.hitrangey) and monsters.rectmonster.y < rectplayer.y:
+                monsters.takedamage(3)
+            if self.hitdirection == 2 and monsters.rectmonster.colliderect(
+                    self.hitrangex) and monsters.rectmonster.x > rectplayer.x:
+                monsters.takedamage(3)
+            if self.hitdirection == 3 and monsters.rectmonster.colliderect(
+                    self.hitrangex) and monsters.rectmonster.x < rectplayer.x:
+                monsters.takedamage(3)
 
     def do_all(self):
         self.draw_background()
@@ -361,16 +394,17 @@ class Player:
             i.move()
             i.animate()
 
-        if self.monster.health > 0:
-            self.monster.move()
-            self.monster.animate()
-
+        for i in self.monster:
+            if i.health > 0:
+                i.move()
+                i.animate()
 
 class Guy:
-    def __init__(self, size, display, obj, movearea):
+    def __init__(self, size, display, obj, movearea, character):
         self.size = size
-        self.walkpic = levels.get_character(2, 'walk')
-        self.standpic = levels.get_character(2, 'stand')
+        self.character = character
+        self.walkpic = levels.get_character(self.character, 'walk')
+        self.standpic = levels.get_character(self.character, 'stand')
         self.lives = 7
         self.display = display
         self.objrects = obj
@@ -464,7 +498,6 @@ class Guy:
                         if time.time() - self.lasttime2 > 1 / self.speeed:
                             self.lasttime2 = time.time()
                             self.rectmonster = self.rectmonster.move(-self.speed, 0)
-                            print(self.rectmonster)
 
                             self.direction = 3
                     else:
@@ -513,16 +546,16 @@ class Guy:
 
 
 class Monster:
-    def __init__(self, size, display, obj):
-        self.walkpic = levels.get_character(3, 'walk')
-        self.standpic = levels.get_character(3, 'stand')
+    def __init__(self, size, display, obj, moverect, startpos, character):
+        self.walkpic = levels.get_character(character, 'walk')
+        self.standpic = levels.get_character(character, 'stand')
         self.size = size
         self.lives = 7
         self.display = display
         self.objrects = obj
         self.rectmonster = pygame.Rect(0, 0, size - 15, size)
-        self.rectmonster.center = (400, 400)
-        self.levelrect = pygame.Rect(200, 200, 800, 400)
+        self.levelrect = moverect
+        self.rectmonster.center = startpos
         self.starttime = time.time()
         self.lasttime1 = self.lasttime2 = self.starttime
         self.nextframe = 150
@@ -543,15 +576,16 @@ class Monster:
     def move(self):  # Hier wird der Spieler bewegt
         run = False
         self.is_walking2 = True
+        rand = random.randint(0,20)
         if self.is_walking2:
-            if rectplayer.y < self.rectmonster.y:
+            if rectplayer.y < self.rectmonster.y or rand == 3:
                 if not self.objects.is_in_object(Dir.down, self.rectmonster, self.speed) and self.is_in_player(Dir.down,
                                                                                                                self.speed):
-                    print('1')
+
                     if self.levelrect.move(0, -self.speed).contains(self.rectmonster.move(0, -2 * self.speed)):
-                        print('2')
+
                         if time.time() - self.lasttime1 > 1 / self.speeed:
-                            print('3')
+
                             self.lasttime1 = time.time()
                             self.rectmonster = self.rectmonster.move(0, -self.speed)
                             self.direction = 1
@@ -563,7 +597,7 @@ class Monster:
 
                 run = True
 
-            if rectplayer.y > self.rectmonster.y:
+            if rectplayer.y > self.rectmonster.y or rand == 7:
                 if not self.objects.is_in_object(Dir.up, self.rectmonster, self.speed) and self.is_in_player(Dir.up,
                                                                                                              self.speed):
                     if self.levelrect.contains(self.rectmonster.move(0, self.speed)):
@@ -577,7 +611,7 @@ class Monster:
                     self.direction = 1
                 run = True
 
-            if rectplayer.x > self.rectmonster.x:
+            if rectplayer.x > self.rectmonster.x or rand == 6:
                 if not self.objects.is_in_object(Dir.left, self.rectmonster, self.speed) and self.is_in_player(Dir.left,
                                                                                                                self.speed):
                     if self.levelrect.contains(self.rectmonster.move(self.speed, 0)):
@@ -592,7 +626,7 @@ class Monster:
 
                 run = True
 
-            if rectplayer.x < self.rectmonster.x:
+            if rectplayer.x < self.rectmonster.x or rand == 14:
                 if not self.objects.is_in_object(Dir.right, self.rectmonster, self.speed) and self.is_in_player(
                         Dir.right, self.speed):
                     if self.levelrect.contains(self.rectmonster.move(-self.speed, 0)):
@@ -638,12 +672,14 @@ class Monster:
             return True
 
     def is_in_monster(self, direction, rect, speed):
-        if rect.move(direction[0] * speed, direction[1] * speed).colliderect(self.rectmonster):
+        if self.health > 0:
+            if rect.move(direction[0] * speed, direction[1] * speed).colliderect(self.rectmonster):
 
-            return False
+                return False
+            else:
+                return True
         else:
             return True
-
     def takedamage(self, damage):
         self.health -= damage
         print(self.health)
